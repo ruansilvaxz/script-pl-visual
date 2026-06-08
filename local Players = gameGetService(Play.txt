@@ -1,0 +1,149 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+
+-- CONFIG
+local CURSOR_SIZE = 10
+local cursorEnabled = true
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "GTACursorGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Cursor GTA
+local cursor = Instance.new("Frame")
+cursor.Name = "GTACursor"
+cursor.Size = UDim2.new(0, CURSOR_SIZE, 0, CURSOR_SIZE)
+cursor.AnchorPoint = Vector2.new(0.5, 0.5)
+cursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+cursor.BorderSizePixel = 2
+cursor.BorderColor3 = Color3.fromRGB(0, 0, 0)
+cursor.ZIndex = 999999
+cursor.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)
+corner.Parent = cursor
+
+-- Interface
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 220, 0, 100)
+frame.Position = UDim2.new(0, 20, 0.5, -50)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 10)
+frameCorner.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 35)
+title.BackgroundTransparency = 1
+title.Text = "Cursor GTA V"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.Parent = frame
+
+local toggle = Instance.new("TextButton")
+toggle.Size = UDim2.new(0.85, 0, 0, 40)
+toggle.Position = UDim2.new(0.075, 0, 0.5, 0)
+toggle.Text = "DESATIVAR"
+toggle.Font = Enum.Font.GothamBold
+toggle.TextSize = 16
+toggle.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+toggle.TextColor3 = Color3.new(1, 1, 1)
+toggle.Parent = frame
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 8)
+toggleCorner.Parent = toggle
+
+-- Atualiza cursor
+local function updateCursor()
+	if cursorEnabled then
+		UserInputService.MouseIconEnabled = false
+		cursor.Visible = true
+	else
+		UserInputService.MouseIconEnabled = true
+		cursor.Visible = false
+	end
+end
+
+toggle.MouseButton1Click:Connect(function()
+	cursorEnabled = not cursorEnabled
+
+	if cursorEnabled then
+		toggle.Text = "DESATIVAR"
+		toggle.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+	else
+		toggle.Text = "ATIVAR"
+		toggle.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+	end
+
+	updateCursor()
+end)
+
+-- Movimento do cursor
+UserInputService.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		cursor.Position = UDim2.fromOffset(input.Position.X, input.Position.Y)
+	end
+end)
+
+-- Detecta botões da GUI
+local function setupButton(obj)
+	if obj:IsA("TextButton") or obj:IsA("ImageButton") then
+
+		obj.MouseEnter:Connect(function()
+			if cursorEnabled then
+				UserInputService.MouseIconEnabled = true
+				cursor.Visible = false
+			end
+		end)
+
+		obj.MouseLeave:Connect(function()
+			if cursorEnabled then
+				UserInputService.MouseIconEnabled = false
+				cursor.Visible = true
+			end
+		end)
+
+	end
+end
+
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Botões existentes
+for _, obj in ipairs(playerGui:GetDescendants()) do
+	setupButton(obj)
+end
+
+-- Botões criados depois
+playerGui.DescendantAdded:Connect(setupButton)
+
+updateCursor()
+
+local RunService = game:GetService("RunService")
+
+RunService.RenderStepped:Connect(function()
+	if not cursorEnabled then
+		return
+	end
+
+	local pos = UserInputService:GetMouseLocation()
+
+	-- Área da barra superior do Roblox
+	if pos.Y <= 70 and pos.X <= 350 then
+		UserInputService.MouseIconEnabled = true
+		cursor.Visible = false
+	else
+		UserInputService.MouseIconEnabled = false
+		cursor.Visible = true
+	end
+end)
